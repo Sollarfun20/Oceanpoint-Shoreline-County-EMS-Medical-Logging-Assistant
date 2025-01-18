@@ -9,3 +9,5 @@ This repo is a work is progress, everything is subject to change.
 
 
 Please read the liscence before using :3
+
+If you appreciate my work, you can tip me here: https://buymeacoffee.com/sollarfun20
