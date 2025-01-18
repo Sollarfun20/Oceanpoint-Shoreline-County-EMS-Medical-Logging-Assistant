@@ -2,7 +2,7 @@
 
 
 #Oceanpoint Shoreline County EMS Medical Logging Assistant
-#Prototype Version V0.6BETA, internal usage ONLY
+#Prototype Version V0.7BETA, internal usage ONLY
 #Python 3.9 (64-bit)
 #Windows Systems ONLY
 
@@ -15,6 +15,12 @@
 #My carrd: https://sollarfun20.carrd.co/#
 #My github: https://github.com/Sollarfun20
 
+
+#PATCH NOTES(EST) 01:15 01/18/2025 - V0.7BETA
+#Fixed dissapearing menu
+#Re-formatted EMS log to display appropriately
+#Added out of index exception prevention for EMS log
+#Removed extrenous exceptions
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -626,6 +632,7 @@ def AEDTimer():
         print (timer, end="\r")                               #Prints time left on timer
         time.sleep(1)                                         #Pauses program for 1 second
         TimeRemaining = TimeRemaining - 1                     #Reduces time remaining by 1 second
+        
 
 
     i = 0
@@ -712,9 +719,9 @@ def CommandsCheck():
 
     #END LOG/TREATMENT command, initiates the end of the patient treatment functionality and gets final information and printout of medical log
         elif CurrentInput in ["endlog", "endtreatment", "endtreat"]:
-
+            global EndConfirmation
             print("Are you sure you want to end treatment functionality and move on to report finalization? y/n")
-            PrintRed("Please note: All patient data, information, and notes will be finalized after this point into the report.")
+            PrintRed("Please note: All patient data, information, and notes will be finalized after this point into the report.", "\n")
 
             while EndConfirmation == False: #Keeps on looping the function until the user has confirmed that they want to end treatment or cancel the action
                 CurrentInput=input()
@@ -731,17 +738,12 @@ def CommandsCheck():
 
                     while CurrentInput != "end":   #Keeps looping the function until the user has stated they want to stop entering providers
                          print('Please enter the discord user ids of the care providers at the scene, seperating each entry with the enter key. Type "end" when done.')
-                         while True:
-                            try:
-                                CurrentInput = int(input())
-                                break
-                            except ValueError:
-                                PrintRed("Value Error: Please ensure you are entering the ids as numbers only!", '\n')
+                         CurrentInput = input()
                          if CurrentInput != "end":  #Appends the user input to the provider names list if it doesn't state "end"
                             ProviderNamesList.append(CurrentInput)
                             index = 0
                             for items in ProviderNamesList:
-                                ProviderPingList[index] = f'<@{ProviderNamesList[index]}>'
+                                ProviderPingList.append(f'<@{ProviderNamesList[index]}>')
                                 index = index + 1
 
                     CurrentInput = input("Please type a description of events for the log. Press the enter key when done.")
@@ -750,22 +752,34 @@ def CommandsCheck():
                     CurrentInput = input('Please enter any additional notes for the log (ex: Had to stage prior, etc...), state "N/A" if not applicable. Press the enter key when done.')
                     ReportNotes = CurrentInput       #Writes the user input to the report notes variable
 
+                    #Exception due to no entry preventer
+                    if len(PatientSystolicBloodPressureList) == 0:
+                        PatientSystolicBloodPressureList.append("N/A")
+                    if len(PatientDiastolicBloodPressureList) == 0:
+                        PatientDiastolicBloodPressureList.append("N/A")
+                    if len(ProviderPingList) == 0:
+                        ProviderPingList.append("N/A")
+                    if len(PatientBloodOxygenLevelList) == 0:
+                        PatientBloodOxygenLevelList.append("N/A")
+                    if len(PatientTreatmentsList) == 0:
+                        PatientTreatmentsList.append("N/A")
+
                     #Place all variables into final report variable as a multi-line string
                     FinalReport = f""":emslogo:   **EMS Call Log**
-                    :emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline:
-                    **EMS Providers Involved: {ProviderPingList} **
-                    **Approx. Postal: {PatientLocation} **
+:emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline:
+**EMS Providers Involved: {ProviderPingList} **
+**Approx. Postal: {PatientLocation} **
                     
-                    **Initial Patient Condition/Injuries: {PatientInjuriesList} **
-                    **Patient Vitals(Initial -> Final):**
-                    > **Pulse:** {PatientPulseList[0]} ** -> ** {PatientPulseList[-1]}
-                    > **Respiration Rate:** {PatientRespirationList[0]} ** -> ** {PatientRespirationList[-1]}
-                    > **Blood Pressure:** {PatientSystolicBloodPressureList[0]}/{PatientDiastolicBloodPressureList[0]} ** -> ** {PatientSystolicBloodPressureList[-1]}/{PatientDiastolicBloodPressureList[-1]}
-                    > **Blood Oxygen Level:** {PatientBloodOxygenLevelList[0]} ** -> ** {PatientBloodOxygenLevelList[-1]}
-                    **Interventions + Medications Administered:** {PatientTreatmentsList}
+**Initial Patient Condition/Injuries: {PatientInjuriesList} **
+**Patient Vitals(Initial -> Final):**
+> **Pulse:** {PatientPulseList[0]} ** -> ** {PatientPulseList[-1]}
+> **Respiration Rate:** {PatientRespirationList[0]} ** -> ** {PatientRespirationList[-1]}
+> **Blood Pressure:** {PatientSystolicBloodPressureList[0]}/{PatientDiastolicBloodPressureList[0]} ** -> ** {PatientSystolicBloodPressureList[-1]}/{PatientDiastolicBloodPressureList[-1]}
+> **Blood Oxygen Level:** {PatientBloodOxygenLevelList[0]} ** -> ** {PatientBloodOxygenLevelList[-1]}
+**Interventions + Medications Administered:** {PatientTreatmentsList}
                     
-                    **Description of Events:** {EventsDescription}
-                    **Other Notes (Ex. Units had to stage before entry):** {ReportNotes}"""
+**Description of Events:** {EventsDescription}
+**Other Notes (Ex. Units had to stage before entry):** {ReportNotes}"""
                
                     #Allows while loop for end confirmation to be ended
                     EndConfirmation = True
@@ -785,10 +799,16 @@ def CommandsCheck():
                             #Clears the interface to start fresh again
                             print("Patient Treatment Complete, refreshing terminal...")
                             time.sleep(1)
-                            os.system('cls')
-                            print("\x1b[2J")
+                            i = 0
+                            while i < 30:
+                                print("\n")
+                                i = i + 1
                             #Calls variable clearer
                             AllVariableClear()
+                            colors = "244;5;5:"
+                            print_figlet("M E D", font = "5lineoblique", justify = "center", width = 130, colors=colors)
+                            print_figlet("L O G G E R", font = "5lineoblique", justify = "center", width = 130, colors=colors)
+                            print_figlet("A S S I S T A N T", font = "5lineoblique", justify = "center", width = 130, colors=colors)
                             return
 
                 elif CurrentInput == "n": #Checks if the user canceled the proccess
@@ -814,9 +834,17 @@ def CommandsCheck():
                     BackupConfirmation = True
                     print("Cancelling patient log...")
                     time.sleep(1)
-                    os.system('cls')
-                    print("\x1b[2J")
+                    i = 0
+                    while i < 30:
+                        print("\n")
+                        i = i + 1
                     AllVariableClear()
+                    colors = "244;5;5:"
+                    print_figlet("M E D", font = "5lineoblique", justify = "center", width = 130, colors=colors)
+                    print_figlet("L O G G E R", font = "5lineoblique", justify = "center", width = 130, colors=colors)
+                    print_figlet("A S S I S T A N T", font = "5lineoblique", justify = "center", width = 130, colors=colors)
+                    print(colored('Welcome to the SCEMS Med Logger Assistant, type in "start" to start a log' , 'red' , None , None , no_color = False , force_color = True))
+
                     return
                 elif CurrentInput == "n":
                     print("Patient log cancellation aborted.")
@@ -886,6 +914,9 @@ def CommandsCheck():
 
             Cancel Patient Treatment ("cancelpatient", "cancelpt", "cnclpatient", "cnclpt", "cpt")
             Alows to cancel current log and return to main menu.
+
+            Start New Patient Log ("start")
+            Starts a new patient log
             """)
 
         else:
@@ -894,6 +925,7 @@ def CommandsCheck():
 
 #Function that makes the welcome screen of the logger, and waits for the user to input "start" to start a log
 def WelcomeMessage():
+    time.sleep(2)
     global CurrentInput
     #Welcome Message, and start prompter
     colors = "244;5;5:"

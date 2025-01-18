@@ -1,0 +1,5 @@
+#PATCH NOTES(EST) 01:15 01/18/2025 - V0.7BETA
+#Fixed dissapearing menu
+#Re-formatted EMS log to display appropriately
+#Added out of index exception prevention for EMS log
+#Removed extrenous exceptions
