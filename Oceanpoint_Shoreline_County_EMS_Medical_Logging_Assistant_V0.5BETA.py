@@ -22,12 +22,13 @@
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 
+from itertools import filterfalse
 from tkinter import CURRENT
 from winsound import PlaySound
 import pyfiglet
 from pyfiglet import print_figlet
 import termcolor
-from termcolor import colored
+from termcolor import colored, cprint
 import os
 from os import system, name
 import datetime
@@ -36,6 +37,8 @@ import playsound
 from playsound import playsound
 import winsound
 import pyperclip
+import colorama
+from colorama import Fore, Style
 
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -115,6 +118,9 @@ index = 0
 StringHolder = None
 #Global variable used to temporarily store a string
 
+StringHolderSecond = None
+#Global variable used to store a second string (end options usually)
+
 SystolicBloodPressure = None
 #Used to temporarily store a specific systolic blood pressure number into a string before it is combined with the diastolic for console printing
 
@@ -131,6 +137,12 @@ BackupConfirmation = False
 ProviderPingList = []
 #Stores the providers userids as pings to be put in the final report
 
+ExitConfirmation = False
+#Technical variable used by welcome
+
+length = None
+#Used to store list length
+
 #--------------------------------------------------------------------------------
 #User Commands
 
@@ -145,28 +157,45 @@ ProviderPingList = []
 #Secondary Functions (lines of code that are called often and thus are stored and called in a function for ease of use)
 
 #Takes in a string as part of the function parameters, and prints it to the console in the color blue
-def PrintBlue(string):
-    print(colored(string, 'blue' , None , None , no_color = False , force_color = True))
 
+def PrintBlue(string, endoption):
+    print(f'{Style.RESET_ALL}{Fore.BLUE}{string}{Style.RESET_ALL}', end=endoption)
+
+#def PrintBlue(string, endoption):
+    #cprint(string, 'blue' , None , None , no_color = False , force_color = True, end=endoption)
+    #termcolor
 
 #Takes in a string as part of the function parameters, and prints it to the console in the color purple
-def PrintPurple(string):
-    print(colored(string, 'magenta' , None , None , no_color = False , force_color = True))
+def PrintPurple(string, endoption):
+    print(f'{Style.RESET_ALL}{Fore.MAGENTA}{string}{Style.RESET_ALL}', end=endoption)
+
+#def PrintPurple(string, endoption):
+    #cprint(string, 'magenta' , None , None , no_color = False , force_color = True, end=endoption)
 
 
 #Takes in a string as part of the function parameters, and prints it to the console in the color red
-def PrintRed(string):
-    print(colored(string, 'red' , None , None , no_color = False , force_color = True))
+def PrintRed(string, endoption):
+    print(f'{Style.RESET_ALL}{Fore.RED}{string}{Style.RESET_ALL}', end=endoption)
+
+#def PrintRed(string, endoption):
+    #cprint(string, 'red' , None , None , no_color = False , force_color = True, end=endoption)
 
 
 #Takes in a string as part of the function parameters, and prints it to the console in the color yellow
-def PrintYellow(string):
-    print(colored(string, 'yellow' , None , None , no_color = False , force_color = True))
+def PrintYellow(string, endoption):
+    print(f'{Style.RESET_ALL}{Fore.YELLOW}{string}{Style.RESET_ALL}', end=endoption)
+
+#def PrintYellow(string, endoption):
+    #cprint(string, 'yellow' , None , None , no_color = False , force_color = True, end=endoption)
+
 
 
 #Takes in a string as part of the function parameters, and prints it to the console in the color green
-def PrintGreen(string):
-    print(colored(string, 'green' , None , None , no_color = False , force_color = True))
+def PrintGreen(string, endoption):
+    print(f'{Style.RESET_ALL}{Fore.GREEN}{string}{Style.RESET_ALL}', end=endoption)
+
+#def PrintGreen(string, endoption):
+    #cprint(string, 'green' , None , None , no_color = False , force_color = True, end=endoption)
 
 #Clears all variables
 def AllVariableClear():
@@ -225,136 +254,182 @@ def AllVariableClear():
 
 #Queries user for the patient's pulse and appends input to pulse lit
 def PatientPulseCheck():
+    global CurrentInput
     CurrentInput = int(input("Please enter the patient's pulse, a normal level is 60-100."))
     PatientPulseList.append(CurrentInput)
+    PrintGreen("Patient pulse updated successfully.", '\n')
 
 
 #Queries user for the patient's respiration rate and appends input to respiration list
 def PatientRespirationCheck():
+    global CurrentInput
     CurrentInput = int(input("Please enter the patient's respiration rate or RR, a normal level is 12-20."))
     PatientRespirationList.append(CurrentInput)
+    PrintGreen("Patient respiration rate updated successfully.", '\n')
 
 
 #Queries user for the patient's systolic and diastolic BP's and appends to their respective lists
 def PatientBloodPressureCheck():
+    global CurrentInput
     CurrentInput = int(input("Please enter the patient's systolic blood pressure or the top BP number, a normal level is about 120."))
     PatientSystolicBloodPressureList.append(CurrentInput)
     CurrentInput = int(input("Please enter the patient's diastolic blood pressure or the bottol BP number, a normal level is about 80."))
     PatientDiastolicBloodPressureList.append(CurrentInput)
+    PrintGreen("Patient blood pressure updated successfully.", '\n')
 
 
 #Queries user for the patient's blood oxygen level and appends the input to the oxygen level
 def PatientBloodOxygenCheck():
+    global CurrentInput
     CurrentInput = int(input("Please enter the patient's blood oxygen level or SPO2 as a number without a percent, a normal level is above 94%."))
     PatientBloodOxygenLevelList.append(CurrentInput)
-
-
-#A function that takes a string in as transfer, checks the pulse list at the index against set parameter numbers, and sends the transfer string to be printed in the according color
-def PulseColorCode(transfer):
-      if PatientPulseList[index] > 100:
-            PrintPurple(transfer)
-      elif 0 < PatientPulseList[index] < 60:
-            PrintRed(transfer)
-      elif 0 == PatientPulseList[index]:
-            PrintBlue(transfer)
-      elif 60 <= PatientPulseList[index] <= 70:
-            PrintYellow(transfer)
-      elif 90 <= PatientPulseList[index] < 100:
-            PrintYellow(transfer)
-      else:
-            PrintGreen(transfer)
-
-
-#A function that takes a string in as transfer, checks the respiration list at the index against set parameter numbers, and sends the transfer string to be printed in the according color
-def RespirationColorCode(transfer):
-      #Color code the respiration rate of the patent
-        if PatientRespirationList[index] > 20:
-             PrintPurple(transfer)
-        elif 0 < PatientRespirationList[index] < 12:
-             PrintRed(transfer)
-        elif 0 == PatientRespirationList[index]:
-             PrintBlue(transfer)
-        elif 12 <= PatientRespirationList[index] <= 14:
-            PrintYellow(transfer)
-        elif 18 <= PatientRespirationList[index] <= 20:
-            PrintYellow(transfer)
-        else:
-            PrintGreen(transfer)
-
+    PrintGreen("Patient blood oxygen updated successfully.", '\n')
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------
 #Vital Color Coding-Related Functions
 
+
+#A function that takes a string in as transfer, checks the pulse list at the index against set parameter numbers, and sends the transfer string to be printed in the according color
+def PulseColorCode(transfer, transfer2):
+      if PatientPulseList[index] > 100:
+            PrintPurple(transfer, transfer2)
+      elif 0 < PatientPulseList[index] < 60:
+            PrintRed(transfer, transfer2)
+      elif 0 == PatientPulseList[index]:
+            PrintBlue(transfer, transfer2)
+      elif 60 <= PatientPulseList[index] <= 70:
+            PrintBlue(transfer, transfer2)
+      elif 90 <= PatientPulseList[index] < 100:
+            PrintYellow(transfer, transfer2)
+      else:
+            PrintGreen(transfer, transfer2)
+
+
+#A function that takes a string in as transfer, checks the respiration list at the index against set parameter numbers, and sends the transfer string to be printed in the according color
+def RespirationColorCode(transfer, transfer2):
+      #Color code the respiration rate of the patent
+        if PatientRespirationList[index] > 20:
+             PrintPurple(transfer, transfer2)
+        elif 0 < PatientRespirationList[index] < 12:
+             PrintRed(transfer, transfer2)
+        elif 0 == PatientRespirationList[index]:
+             PrintBlue(transfer, transfer2)
+        elif 12 <= PatientRespirationList[index] <= 14:
+            PrintYellow(transfer, transfer2)
+        elif 18 <= PatientRespirationList[index] <= 20:
+            PrintYellow(transfer, transfer2)
+        else:
+            PrintGreen(transfer, transfer2)
+
+
 #A function that takes a string in as transfer, checks the blood pressure list at the index against set parameter numbers, and sends the transfer string to be printed in the according color
-def BloodPressureColorCode(transfer):
+def BloodPressureColorCode(transfer, transfer2):
  #Color code the blood pressure of the patient
         if PatientSystolicBloodPressureList[index] != 120 or PatientDiastolicBloodPressureList[index] != 80:
-            PrintYellow(transfer)
+            PrintYellow(transfer, transfer2)
         else:
-            PrintGreen(transfer)
+            PrintGreen(transfer, transfer2)
       
             
 #A function that takes a string in as transfer, checks the blood oxygen level list at the index against set parameter numbers, and sends the transfer string to be printed in the according color
-def BloodOxygenColorCode(transfer): 
+def BloodOxygenColorCode(transfer, transfer2): 
   #Color code SPo2 level of patient
         if PatientBloodOxygenLevelList[index] <= 10:
-             PrintBlue(transfer)
+             PrintBlue(transfer, transfer2)
         elif PatientBloodOxygenLevelList[index] <= 80:
-             PrintRed(transfer)
+             PrintRed(transfer, transfer2)
         elif PatientBloodOxygenLevelList[index] <= 90:
-             PrintYellow(transfer)
+             PrintYellow(transfer, transfer2)
         elif PatientBloodOxygenLevelList[index] < 96:
-             PrintYellow(transfer)
+             PrintYellow(transfer, transfer2)
         else:
-             PrintGreen(transfer) 
+             PrintGreen(transfer, transfer2) 
 
 
 #Function that allows user to view the most recently entered set of vitals
 def RecentVitalsPrintOut():
     index = -1
 
-    StringHolder = PatientPulseList[index]
-    PulseColorCode(StringHolder)
+    StringHolder = f"Pulse: {PatientPulseList[index]}"
+    PulseColorCode(StringHolder, '/n')
 
-    StringHolder = PatientRespirationList[index]
-    RespirationColorCode(StringHolder)
+    StringHolder = f"RR: {PatientRespirationList[index]}"
+    RespirationColorCode(StringHolder, '/n')
 
     SystolicBloodPressure = str(PatientSystolicBloodPressureList[index])
     DiastolicBloodPressure = str(PatientDiastolicBloodPressureList[index])
-    StringHolder = SystolicBloodPressure + "/" + DiastolicBloodPressure
-    BloodPressureColorCode(StringHolder)
+    StringHolder = f"BP: {SystolicBloodPressure}/{DiastolicBloodPressure}"
+    BloodPressureColorCode(StringHolder, '/n')
 
-    StringHolder = PatientBloodOxygenLevelList[index] + "%"
-    BloodOxygenColorCode(StringHolder)
+    StringHolder = f"SPO2: {PatientBloodOxygenLevelList[index]}%"
+    BloodOxygenColorCode(StringHolder, '/n')
    
     
 #Function that allows the user to view out all historical patient vitals, color coded
 def FullVitalsPrintOut():
+    StringHolderSecond = " "
     index = 0
+    length = len(PatientPulseList) - 1
     for items in PatientPulseList:
-        StringHolder = str(PatientPulseList[index]) + " -> "
-        PulseColorCode(StringHolder)
+        if index == 0:
+            StringHolder = f"Pulse: {PatientPulseList[index]} ->"
+        elif index == length:
+            StringHolder = f"{PatientPulseList[index]}"
+        else:
+            StringHolder = f"{PatientPulseList[index]} ->"
+        PulseColorCode(StringHolder, StringHolderSecond)
+        index = index + 1
 
-        StringHolder = str(PatientRespirationList[index]) + " -> "
-        RespirationColorCode(StringHolder)
+    print("\n")
+    index = 0
+    length = len(PatientRespirationList) - 1
+    for items in PatientRespirationList:
+        if index == 0:
+            StringHolder = f"RR: {PatientRespirationList[index]} ->"
+        elif index == length:
+            StringHolder = f"{PatientRespirationList[index]}"
+        else:
+            StringHolder = f"{PatientRespirationList[index]} ->"
+        RespirationColorCode(StringHolder, StringHolderSecond)
+        index = index + 1
 
+    print("\n")
+    index = 0
+    length = len(PatientSystolicBloodPressureList) - 1
+    for items in PatientSystolicBloodPressureList:
         SystolicBloodPressure = str(PatientSystolicBloodPressureList[index])
         DiastolicBloodPressure = str(PatientDiastolicBloodPressureList[index])
-        StringHolder = SystolicBloodPressure + "/" + DiastolicBloodPressure + " -> "
-        BloodPressureColorCode(StringHolder)
+        if index == 0:
+            StringHolder = f"BP: {SystolicBloodPressure}/{DiastolicBloodPressure} ->"
+        elif index == length:
+            StringHolder = f"{SystolicBloodPressure}/{DiastolicBloodPressure}"
+        else:
+            StringHolder = f"{SystolicBloodPressure}/{DiastolicBloodPressure} ->"
+        BloodPressureColorCode(StringHolder, StringHolderSecond)
+        index = index + 1
 
-        StringHolder = PatientBloodOxygenLevelList[index] + "%" + " -> "
-        BloodOxygenColorCode(StringHolder)
+    print("\n")
+    index = 0
+    length = len(PatientBloodOxygenLevelList) - 1
+    for items in PatientBloodOxygenLevelList:
+        if index == 0:
+            StringHolder = f"SPO2: {PatientBloodOxygenLevelList[index]}% ->"
+        elif index == length:
+            StringHolder = f"{PatientBloodOxygenLevelList[index]}%"
+        else:
+            StringHolder = f"{PatientBloodOxygenLevelList[index]}% ->"
+        BloodOxygenColorCode(StringHolder, StringHolderSecond)
 
         index = index + 1
+    print("\n")
 
 
 #Function that allows the user to update all patient vitals
 def UpdateVitals():
-    PatientPulseCheck
-    PatientRespirationCheck
-    PatientBloodPressureCheck
-    PatientBloodOxygenCheck
+    PatientPulseCheck()
+    PatientRespirationCheck()
+    PatientBloodPressureCheck()
+    PatientBloodOxygenCheck()
 
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -362,21 +437,23 @@ def UpdateVitals():
 
 #Queries user for the patient's injuries and appends the inputs to the Patient Injuries List
 def PatientInjuryCheck():
-   CurrentInput == "Clear."
+   global CurrentInput
+   CurrentInput == "clear"
    while CurrentInput != "end":
         CurrentInput = input('Please enter the patient\'s injuries one at a time seperated by different instances of enter, type "end" when done.')
         if CurrentInput == "cancel":
-            print("Proccess aborted.")
+            PrintRed("Proccess aborted.", '\n')
             return
         elif CurrentInput != "end":
             PatientInjuriesList.append(CurrentInput)
-            print("Patient injuries updated successfully.")
         else:
+            PrintGreen("Patient injuries updated successfully.", '\n')
             return
 
 
 #Function that allows the user to see all patient injures in a numbered list, enter the according number of one of the injuries, and then replace the injury's entry
 def UpdateInjuries():
+    global CurrentInput
     index=0
     for items in PatientInjuriesList:
         ListCounter = index + 1
@@ -386,14 +463,15 @@ def UpdateInjuries():
     index = CurrentInput - 1
     CurrentInput = input('Please type the update for the specified injury, press the enter key when done. Type "cancel" to cancel.')
     if CurrentInput == "cancel":
-        print("Proccess aborted.")
+        PrintRed("Proccess aborted.", '\n')
         return
     PatientInjuriesList[index] = CurrentInput
-    print("Entry updated successfully.")
+    PrintGreen("Entry updated successfully.", '\n')
 
 
 #Function that allows the user to see all patient injuries in a numbered list, enter the according number of one of the injuries, which will then be removed from the patient injuries list
 def RemoveInjury():
+    global CurrentInput
     index=0
     for items in PatientInjuriesList:
         ListCounter = index + 1
@@ -402,7 +480,7 @@ def RemoveInjury():
     CurrentInput = int(input("Please select the number of the injury you wish to delete."))
     index = CurrentInput - 1
     PatientInjuriesList.pop(index)
-    print("Entry successfully removed.")
+    PrintGreen("Entry successfully removed.", '\n')
 
 
 #Function that allows the user to see all of the patient injuries
@@ -417,11 +495,12 @@ def ViewInjury():
 def AddNote():
     CurrentInput = input("Enter your patient note, press the enter key when done.")
     PatientNotesList.append(CurrentInput)
-    print("Entry added successfully.")
+    PrintGreen("Entry added successfully.", '\n')
 
 
 #Function that allows the user to see all patient notes in a numbered list, and remove any of them by entering the number of the note they wish to delete
 def RemoveNote():
+    global CurrentInput
     index=0
     for items in PatientNotesList:
         ListCounter = index + 1
@@ -430,11 +509,12 @@ def RemoveNote():
     CurrentInput = int(input("Please select the number of the note you wish to delete."))
     index = CurrentInput - 1
     PatientNotesList.pop(index)
-    print("Entry successfully removed.")
+    PrintGreen("Entry successfully removed.", '\n')
 
 
 #Function that will print ouf all of the patients notes, one line after another, seperated by one line in between each.
 def ViewNotes():
+    global CurrentInput
     index=0
     for items in PatientNotesList:
         print(f"{PatientNotesList[index]}")
@@ -448,21 +528,23 @@ def ViewNotes():
 
 #Function that allows the user to add as many patient treatments as desired, which will be appended to the list, unti they type "end"
 def AddTreatment():
+    global CurrentInput
     CurrentInput = "Cleared."
     while CurrentInput != "end":
-        CurrentInput = input('Please enter the patient\'s injuries one at a time seperated by different instances of enter, type "end" when done.')
+        CurrentInput = input('Please enter the given treatments one at a time seperated by different instances of enter, type "end" when done.')
         if CurrentInput == "cancel":
-            print("Proccess aborted successfully.")
+            PrintRed("Proccess aborted successfully.", '\n')
             return
         elif CurrentInput != "end":
             PatientTreatmentsList.append(CurrentInput)
-            print("Patient Treatments updated succesfully.")
         else:
+            PrintGreen("Patient Treatments updated succesfully.", '\n')
             return
 
 
 #Function that allows the user to see all patient treatments in a numbered list, input the according number of the treatment to change, and to replace that treatment in the list
 def UpdateTreatment():
+    global CurrentInput
     index=0
     for items in PatientTreatmentsList:
         ListCounter = index + 1
@@ -472,11 +554,11 @@ def UpdateTreatment():
     index = CurrentInput - 1
     CurrentInput = input('Please type the update for the specified treatment, press the enter key when done. Type "cancel" to cancel.')
     if CurrentInput == "cancel":
-       print("Proccess aborted successfully.")
+       PrintRed("Proccess aborted successfully.", '\n')
        return
     else:
         PatientTreatmentsList[index] = CurrentInput
-        print("Entry updated successfully.")
+        PrintGreen("Entry updated successfully.", '\n')
 
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -505,6 +587,7 @@ def AEDTimer():
 
 #Function that continously checks for commands, triggers reponses, and finalizes report
 def CommandsCheck():
+    global CurrentInput
     global DuringTreatment
     while DuringTreatment == True:
         CurrentInput = input()
@@ -643,6 +726,7 @@ def CommandsCheck():
                             print("Patient Treatment Complete, refreshing terminal...")
                             time.sleep(1)
                             os.system('cls')
+                            print("\x1b[2J")
                             #Calls variable clearer
                             AllVariableClear()
                             return
@@ -671,6 +755,7 @@ def CommandsCheck():
                     print("Cancelling patient log...")
                     time.sleep(1)
                     os.system('cls')
+                    print("\x1b[2J")
                     AllVariableClear()
                     return
                 elif CurrentInput == "n":
@@ -679,10 +764,10 @@ def CommandsCheck():
                 else:
                     print('Command not recognized, please type "y" to confirm patient log cancellation or "n" to abort.')
     #COMMAND LIST command, lists all commands
-        elif CurrentInput in ["commandslist", "commandlist", "cmdlist", "commandlst", "cmdlst", "command", "commands", "cmd"]:
+        elif CurrentInput in ["commandslist", "commandlist", "cmdlist", "commandlst", "cmdlst", "command", "commands", "cmd", "cmds"]:
             print("""List of commands:
 
-            Commands List ("commandslist", "commandlist", "cmdlist", "commandlst", "cmdlst", "command", "commands", "cmd"):
+            Commands List ("commandslist", "commandlist", "cmdlist", "commandlst", "cmdlst", "command", "commands", "cmd", "cmds"):
             Displays the full list of available commands.
 
             Last Vitals ("lastvitals", "lstvitals", "lvt"):
@@ -744,11 +829,12 @@ def CommandsCheck():
             """)
 
         else:
-            print('Command not recognized. Please see the documentation or type "cmd" for a list of all valid commands, their usage, and shorthand means of referencing them.')
+            PrintRed('Command not recognized. Please see the documentation or type "cmd" for a list of all valid commands, their usage, and shorthand means of referencing them.', "\n")
 
 
 #Function that makes the welcome screen of the logger, and waits for the user to input "start" to start a log
 def WelcomeMessage():
+    global CurrentInput
     #Welcome Message, and start prompter
     colors = "244;5;5:"
     print_figlet("M E D", font = "5lineoblique", justify = "center", width = 130, colors=colors)
@@ -756,20 +842,21 @@ def WelcomeMessage():
     print_figlet("A S S I S T A N T", font = "5lineoblique", justify = "center", width = 130, colors=colors)
 
     print(colored('Welcome to the SCEMS Med Logger Assistant, type in "start" to start a log' , 'red' , None , None , no_color = False , force_color = True))
-    CurrentInput = input()
+    while ExitConfirmation == False:
+        CurrentInput = input()
+        if CurrentInput == "start":
+            global DuringTreatment
+            PrintGreen("New patient log started.", '\n')
+            PatientPulseCheck()
+            PatientRespirationCheck()
+            PatientInjuryCheck()
+            print("Initial information complete, for further information notation and access please use the commands, type cmds for a list of commands.")
+            DuringTreatment = True
+            ExitConfirmation == True
+            CommandsCheck()
 
-    if CurrentInput == "start":
-        global DuringTreatment
-        print("New patient log started")
-        PatientPulseCheck()
-        PatientRespirationCheck()
-        PatientInjuryCheck()
-        print("Initial information complete, for further information notation and access please use the commands, type cmds for a list of commands.")
-        DuringTreatment = True
-        CommandsCheck()
-
-    else: #command not recognized/start not typed
-        print(colored('Command not recognized.' , 'red' , None , None , no_color = False , force_color = True))
+        else: #command not recognized/start not typed
+            print(colored('Command not recognized.' , 'red' , None , None , no_color = False , force_color = True))
 
 
 #--------------------------------------------------------------------------------
@@ -778,6 +865,7 @@ def WelcomeMessage():
 while 1 == 1:
     WelcomeMessage()
     EndConfirmation = False
+    ExitConfirmation == False
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------
 
