@@ -22,6 +22,11 @@
 #Added out of index exception prevention for EMS log
 #Removed extrenous exceptions
 
+#To-Do List
+#help commands for topics such as cardiac and hypothermia
+#offer personalized distributions (specific commands that are easiser for that user, different menu color theme, etc....)
+
+#Development ended for the time being at 2:29 AM on 01/18/2025, will be picked up later the same day
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #******************************************************************** Import Modules: *****************************************************************
@@ -654,7 +659,7 @@ def CommandsCheck():
         CurrentInput = input()
 
     #LAST/RECENT VITALS Command, gives most recent set of all vitals taken
-        if CurrentInput in ["lastvitals", "lstvitals", "lvt"]:
+        if CurrentInput in ["lastvitals", "lstvitals", "lvt", "recentvitals", "rcnvitals", "rvitals"]:
             RecentVitalsPrintOut()
 
     #ALL/HISTORICAL VITALS command, gives all historical vitals color coded
@@ -858,7 +863,7 @@ def CommandsCheck():
             Commands List ("commandslist", "commandlist", "cmdlist", "commandlst", "cmdlst", "command", "commands", "cmd", "cmds"):
             Displays the full list of available commands.
 
-            Last Vitals ("lastvitals", "lstvitals", "lvt"):
+            Last Vitals ("lastvitals", "lstvitals", "lvt", "recentvitals", "rcnvitals", "rvitals"):
             Displays the most recent entered set of patient vitals(pulse, RR, BP, SPo2), color coded.
 
             All Vitals ("allvitals", "vitalhistory", "vitalshistory", "hstvitals", "hvt")
@@ -917,8 +922,10 @@ def CommandsCheck():
 
             Start New Patient Log ("start")
             Starts a new patient log
-            """)
 
+            
+            """)
+            #Have to add help commands for different things (hypothermia, cardiac, etc....)
         else:
             PrintRed('Command not recognized. Please see the documentation or type "cmd" for a list of all valid commands, their usage, and shorthand means of referencing them.', "\n")
 
