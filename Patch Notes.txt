@@ -1,3 +1,11 @@
+#PATCH NOTES(EST) ##:## 01/18/2025 - V0.8 BETA
+#Fixed first provider added being mentioned multiple times in the log instead of the second in cases where there was more than one provider
+#Fixed "y" and "n" commands not recognizing for confirming the end of patient log phase
+
+
+
+
+
 #PATCH NOTES(EST) 01:15 01/18/2025 - V0.7BETA
 #Fixed dissapearing menu
 #Re-formatted EMS log to display appropriately
