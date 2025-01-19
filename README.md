@@ -2,6 +2,7 @@
 
 Welcome to the Shoreline County EMS Medical Logging Assistant. This program is designed to make it easier for you to conduct medical logs and includes some extra helpful tools.
 
+## For the moment, the program is in closed beta and will NOT BE ACCEPTING any external pull requests. 
 To suggest an addition, tool, or new command, direct message me on Discord and I will attempt to get back to you.
 To report bugs, file in issue in the according branch. If it is something critical then direct message me on discord with the issue.
 
