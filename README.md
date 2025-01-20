@@ -10,3 +10,11 @@ This repo is a work is progress, everything is subject to change.
 Please read the liscence before using :3
 
 If you appreciate my work, you can tip me here: https://buymeacoffee.com/sollarfun20
+
+## How to use
+You can use the application through 2 methods:
+
+1. Download the most recent source code (.py file with the highest number), download a python 3.9 interpreter, and run the code.
+
+
+2. Download the most recent executable version in the Executable Versions folder and run the .exe file, keep in mind you will have to bypass windows defender/antivirus software as they flag it because it doesn't have an official developer signature (which costs $$$)
