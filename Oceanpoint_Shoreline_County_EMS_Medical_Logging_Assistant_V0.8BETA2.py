@@ -1,4 +1,4 @@
-
+﻿# coding: cp1252
 
 
 #Oceanpoint Shoreline County EMS Medical Logging Assistant
@@ -10,16 +10,15 @@
 
 #Created by sollarfun20 :3
 
-#Oceanpoint Shoreline County EMS Medical Logging Assistant � 2025 by Sollarfun20 is licensed under GNU Affero General Public License v3.0
+#Oceanpoint Shoreline County EMS Medical Logging Assistant © 2025 by Sollarfun20 is licensed under GNU Affero General Public License v3.0
 #There is NO WARRANTY on this code and I am not liable for any damages to your system. See the liscence for more details.
 #My carrd: https://sollarfun20.carrd.co/#
 #My github: https://github.com/Sollarfun20
 
 
-#PATCH NOTES(EST) 21:08 01/19/2025 - V0.8 BETA
+#PATCH NOTES(EST) 21:47 01/18/2025 - V0.8 BETA
 #Fixed first provider added being mentioned multiple times in the log instead of the second in cases where there was more than one provider
 #Fixed "y" and "n" commands not recognizing for confirming the end of patient log phase
-#Fixed formatting for logs
 
 #To-Do List
 #help commands for topics such as cardiac and hypothermia
@@ -770,11 +769,10 @@ def CommandsCheck():
                     #Place all variables into final report variable as a multi-line string
                     FinalReport = f""":emslogo:   **EMS Call Log**
 :emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline::emsline:
-**EMS Providers Involved:** {ProviderPingList} 
-**Approx. Postal:** {PatientLocation} 
+**EMS Providers Involved: {ProviderPingList} **
+**Approx. Postal: {PatientLocation} **
                     
-**Patient Name:** {PatientName}
-**Initial Patient Condition/Injuries:** {PatientInjuriesList} 
+**Initial Patient Condition/Injuries: {PatientInjuriesList} **
 **Patient Vitals(Initial -> Final):**
 > **Pulse:** {PatientPulseList[0]} ** -> ** {PatientPulseList[-1]}
 > **Respiration Rate:** {PatientRespirationList[0]} ** -> ** {PatientRespirationList[-1]}
