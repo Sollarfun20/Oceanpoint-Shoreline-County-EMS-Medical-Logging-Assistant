@@ -1,3 +1,9 @@
+#PATCH NOTES(EST) 18:22 01/22/2025 - V0.91 BETA
+#Added UNTESTED AED timer completion sound for mac OS X systems
+#Started airway management info command
+
+
+
 #PATCH NOTES(EST) 21:23 01/21/2025 - V0.9 BETA
 #AED timer now can be cancelled and time left can be displayed through "cancel" and "timeleft" respectively
 #cprinfo command now displays information based on entered training level of the user
