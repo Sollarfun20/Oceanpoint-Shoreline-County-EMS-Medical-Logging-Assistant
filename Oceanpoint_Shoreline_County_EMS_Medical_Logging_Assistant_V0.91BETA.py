@@ -29,8 +29,7 @@
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-import numpy as np
-import simpleaudio as sa
+
 import platform
 from itertools import filterfalse
 from tkinter import CURRENT
@@ -708,34 +707,34 @@ if EndTimer == True:
             i = i +1
         TimerPrintExit = False
 
-#UNTESTED AT THE MOMENT
-    elif platform.system() == "Darwin": #Checks to see if current system is Mac OS X
-        i = 0 #resets counter to 0
-        while i <= 4: #Repeats until proccess has looped 4 times
-            print("2 Minute AED timer has completed, please check the AED.") 
-            frequency = 2000  # The ayed note will be 2000 Hz
-            fs = 800  # 800 samples per second
-            seconds = .5  # Note duration of 3 seconds
+#BROKEN AT THE MOMENT
+   # elif platform.system() == "Darwin": #Checks to see if current system is Mac OS X
+       # i = 0 #resets counter to 0
+        #while i <= 4: #Repeats until proccess has looped 4 times
+          #  print("2 Minute AED timer has completed, please check the AED.") 
+          #  frequency = 2000  # The ayed note will be 2000 Hz
+         #   fs = 800  # 800 samples per second
+         #   seconds = .5  # Note duration of 3 seconds
 
             # Generate array with seconds*sample_rate steps, ranging between 0 and seconds
-            t = np.linspace(0, seconds, seconds * fs, False)
+         #   t = np.linspace(0, seconds, seconds * fs, False)
 
             # Generate a 2000 Hz sine wave
-            note = np.sin(frequency * t * 2 * np.pi)
+        #    note = np.sin(frequency * t * 2 * np.pi)
 
             # Ensure that highest value is in 16-bit range
-            audio = note * (2**15 - 1) / np.max(np.abs(note))
+       #     audio = note * (2**15 - 1) / np.max(np.abs(note))
             # Convert to 16-bit data
-            audio = audio.astype(np.int16)
+       #     audio = audio.astype(np.int16)
 
             # Start playback
-            play_obj = sa.play_buffer(audio, 1, 2, fs)
+        #    play_obj = sa.play_buffer(audio, 1, 2, fs)
 
             #Wait for playback to finish before exiting
-            play_obj.wait_done()
-            time.sleeep(.25) # Stops process for .25 seconds
-            i = i+1  #Increases counter by 1
-        TimerPrintExit = False
+        #    play_obj.wait_done()
+        #    time.sleeep(.25) # Stops process for .25 seconds
+       #     i = i+1  #Increases counter by 1
+     #   TimerPrintExit = False
 else: #Error catch-all
     EndTimer = False
     CurrentInput = "Cleared"
@@ -823,7 +822,7 @@ def AirwayCareLevelThree(iteration):
         if iteration == 0:
             return f"{Style.RESET_ALL}{Fore.RED}PARAMEDIC{Style.RESET_ALL}"
         elif iteration == 1:
-            test
+            print("test")
         else:
             return f"\r"
     else:
@@ -838,9 +837,9 @@ def AirwayCareLevelTwo(iteration):
     global ListOffset
     if ProviderTrainingLevel >= 2:
         if iteration == 1:
-            test
+            print("test")
         elif iteration == 2:
-            test
+            print("test")
         else:
             return f"\r"
     else:
