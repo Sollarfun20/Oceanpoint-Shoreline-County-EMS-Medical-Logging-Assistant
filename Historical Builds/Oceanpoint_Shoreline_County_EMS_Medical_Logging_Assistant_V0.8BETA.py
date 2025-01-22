@@ -21,6 +21,8 @@
 #Fixed "y" and "n" commands not recognizing for confirming the end of patient log phase
 #Fixed formatting for logs
 
+#PA
+
 #To-Do List
 #help commands for topics such as cardiac and hypothermia
 #offer personalized distributions (specific commands that are easiser for that user, different menu color theme, etc....)
@@ -46,6 +48,8 @@ import winsound
 import pyperclip
 import colorama
 from colorama import Fore, Style
+from inputimeout import inputimeout
+import threading
 
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -105,7 +109,8 @@ ReportNotes = None
 FinalReport = None
 #Final Report for copy paste
 
-
+ProviderTrainingLevel = None
+#Integer variable that stores medical care level of the provider (1 for EMT, 2 for AEMT, 3 for PM)
 #--------------------------------------------------------------------------------
 #Technical storage Variables
 
@@ -149,6 +154,17 @@ ExitConfirmation = False
 
 length = None
 #Used to store list length
+
+EndTimer = False
+#Used to store end timer marker
+
+counter = None
+#ignore
+
+ListOffset = None
+#Used to offset info lists
+
+
 
 #--------------------------------------------------------------------------------
 #User Commands
@@ -208,10 +224,10 @@ def PrintGreen(string, endoption):
 def AllVariableClear():
     #Sets all variables to be treated globally
     global PatientPulseList
-    global PatientRespirationList
-    global PatientSystolicBloodPressureList
     global PatientDiastolicBloodPressureList
     global PatientBloodOxygenLevelList
+    global PatientRespirationList
+    global PatientSystolicBloodPressureList
     global PatientInjuriesList
     global PatientTreatmentsList
     global PatientNotesList
@@ -624,26 +640,147 @@ def UpdateTreatment():
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------
 #Miscellaneous Command Functions
+def TimerPrint(time):
+    global CurrentInput
+    print(time)
+    CurrentInput = "Cleared"
 
-#Set a timer for the AED for 3 minutes, when done play a sound and print a text letting them know the AED timer is completed.
-def AEDTimer():
-    TimeRemaining = 180                                       #Sets time remaining to 180 seconds (3 minutes)
+#Checks for input from user, displays time left on timer if needed. 
+def TwoMinuteTimer():
+    global CurrentInput
+    global TimeRemaining
+    global EndTimer
+    PrintGreen('The 2 minute AED timer has started, enter "cancel" to cancel the timer or "timeleft" to see the time left on the timer', "\n")
+    TimeRemaining = 120                                       #Sets time remaining to 120 seconds (2 minutes)
     while TimeRemaining > 0:                                  #Keeps running until time remaining is at 0 (3 minutes up)
+        global CurrentInput
         timer = datetime.timedelta(seconds = TimeRemaining)   #Sets timer to time remaining
-        print (timer, end="\r")                               #Prints time left on timer
-        time.sleep(1)                                         #Pauses program for 1 second
-        TimeRemaining = TimeRemaining - 1                     #Reduces time remaining by 1 second
+        if CurrentInput == "timeleft":
+                TimerPrint(timer)
+                time.sleep(1)                                         #Pauses program for 1 second
+                TimeRemaining = TimeRemaining - 1                     #Reduces time remaining by 1 second
+        elif CurrentInput == "cancel":
+            global EndTimer
+            PrintRed("Standby for AED timer cancellation, this may take up to 10 seconds...", "\n")
+            EndTimer = True
+            return
+        else:
+            time.sleep(1)
+            TimeRemaining = TimeRemaining - 1
+    else:
+        EndTimer = True
+CurrentInput == "Cleared."
         
 
+#Thread to get input for AED timer, times out every 5 seconds
+def TimerInput():
+    global CurrentInput
+    global EndTimer
+    EndTimer = False
+    counter = 0
+    while EndTimer == False:
+        try:
+            CurrentInput = inputimeout(timeout=10)
+        except Exception:
+            counter = counter + 1
+    if EndTimer == True:
+        PrintGreen("The AED timer has been successfully cancelled.", "\n")
+    return
 
+
+#AED timer for 2 minutes, runs both above threads
+def AEDTimer():
+    global EndTimer
+    t1 = threading.Thread(target=TwoMinuteTimer)
+    t2 = threading.Thread(target=TimerInput)
+    t1.start()
+    t2.start()
+    t2.join(timeout=118)
+    t1.join()
+if EndTimer == True:
     i = 0
-    print("3 Minute AED timer has completed, please check the AED.")  #Prints Alert Text in Console
+    print("2 Minute AED timer has completed, please check the AED.")  #Prints Alert Text in Console
     while i <= 4:                                                     #Play a sound via windows speakers at a frequency of 2000hz for .25 seconds, with .1 second in between, 4 times.
         winsound.Beep(2000,250)
         time.sleep(.1)
         i = i +1
+    TimerPrintExit = False
+else:
+    EndTimer = False
+    CurrentInput = "Cleared"
 
+#Outputs string for paramedic level of CPR care if applicable
+def CPRCareLevelThree(iteration):
+    global ListOffset
+    if ProviderTrainingLevel == 3:
+        if iteration == 0:
+            return f"{Style.RESET_ALL}{Fore.RED}PARAMEDIC{Style.RESET_ALL}"
+        elif iteration == 1:
+            return f"{Style.RESET_ALL}{Fore.RED}\n PM:     a. Administer 1mg Epinephrene via IV/IO every 3-5 minutes {Style.RESET_ALL}"
+        elif iteration == 2:
+            return f"{Style.RESET_ALL}{Fore.RED}\n PM:     b. When possible, use an advanced airway (I-gel or Intubation){Style.RESET_ALL}"
+        elif iteration == 3:
+            return f"""{Style.RESET_ALL}{Fore.RED}\n PM:         i. When this is complete, switch to continuous compressions and ventilations every 6 seconds.
+               Analyaze AED every 2 minutes as normal.{Style.RESET_ALL}"""
+        else:
+            return "\r"
+    else:
+        if iteration == 0:
+            return f"EMT"
+        else:
+            return f"\r"
 
+def CPRCareLevelOne():
+     print(f"""CPR Protocol: {CPRCareLevelThree(0)}
+     1. Complete General Care Protocol and control all major bleeding
+     2. Confirm pulse is absent and that breathing is abnormal/absent (guppy breathing does not qualify as normal breathing)
+     3. Consider naxolone if an overdose is possible.
+     4. Begin Compressions
+        a. Place Patient on a flat surface.
+        b. Begin chest compressions on center of chest at the nipple lines
+        c. Give 30 compressions 2 inches deep at a rate of 100 BPM per CPR cycle.
+     5. Give 2 rescue breaths/ventilations
+        a. Give 2 rescue breaths using a CPR mask or BVM (preferred if available)
+        b. Consider usage of an airway adjunct when minimization of interruption to CPR is possible.
+     6. Repeat compressions and rescue breaths in 30:2 ratio.{CPRCareLevelThree(1)}{CPRCareLevelThree(2)}{CPRCareLevelThree(3)}
+     7. Setup AED {Style.RESET_ALL}{Fore.RED}(or EKG for PM+){Style.RESET_ALL}
+        a. Turn on the AED
+        b. Place pads on patient's bare chest.
+        c. Start AED timer for 2 minutes via aedtimer command or via seperate timer
+    8. After 2 minutes of compressions, the AED will state to clear off of the patient for analyzation
+        a. Stop all patient contact, including compressions
+        b. AED will check for a shockable rythm ( "-checks AED- (shockable?)" )
+        c. If shockable:
+            i. Ensure all units are clear of the patient
+           ii. Press the shock button
+          iii. Reassess for breathing and pulse (see 9)
+        d. If not shockable:
+            i. Resume CPR
+           ii. Start another 2 minute AED timer.
+    9. Reassess the patient every 2 minutes / 5 cycles of CPR
+        a. Check for breathing and a pulse
+        b. If pulse/breathing is present:
+            i. STOP CPR
+           ii. Control any further injuries
+          iii. Keep the patient stable - Treat for shock until EMS arrival
+        c. If pulse/breathing not present:
+            i. Repeat from step 10 until EMS arrives
+           ii. Reassess the patient every 2 minutes / 5 cycles of CPR
+   10. You may stop or not attempt CPR when:
+        a. The patient has return of spontaneous circulation (ROSC)
+        b. Crews are too exhausted to continue (Call for more hands before this!)
+        c. A higher level of care has the patient (doctors, etc)
+        d. There are injuries incompatible with life
+        e. There are obvious signs of death:
+            i. Dependent lividity
+           ii. Rigor mortis
+        f. The scene becomes unsafe
+        g. You have gone through 3 cycles, preferably 5, of CPR with no ROSC
+            i. Each cycle is 2 minutes
+           ii. Each cycle involves checking the EKG for a shockable rhythm
+          iii. NO ROSC was obtained at any point
+        h. {Style.RESET_ALL}{Fore.RED}If the patient shows, or has shown signs of life AT ANY POINT DURING TREATMENT - YOU MUST TRANSPORT TO HOSPITAL{Style.RESET_ALL}
+    """)
 #---------------------------------------------------------------------------------------------------------------------------------------------------
 #Primary, Critical Program Functions
 
@@ -827,6 +964,11 @@ def CommandsCheck():
     #AED TIMER command, starts a timer for 3 minutes for the user for AED analyzation, will play a sound and display text when 3 minutes are up
         elif CurrentInput in ["aedtimer", "aedtm"]:
             AEDTimer()
+
+    #CPR INFO command
+        elif CurrentInput in ["cprinfo", "cprhelp", "infocpr", "helpcpr"]:
+            CPRCareLevelOne()
+
             
     #CANCEL command, exits and goes back to the start menu
         elif CurrentInput in ["cancelpatient", "cancelpt", "cnclpatient", "cnclpt", "cpt"]:
@@ -911,7 +1053,7 @@ def CommandsCheck():
             Displays numbered list of all patient treatments and prompts to select a number. The selected entry can then be overwritten/updated, type "cancel" to cancel.
 
             AED Timer ("aedtimer", "aedtm")
-            Sets a 3 minute timer for AED rythym analyzation. Will play a sound and prompt on display when timer is done.
+            Sets a 2 minute timer for AED rythym analyzation. Will play a sound and prompt on display when timer is done.
 
             End Log/Patient Treatment ("endlog", "endtreatment", "endtreat")
             Allows finalization of log and will exit the treatment phase of the application. Can be aborted, please note if confirmed all vitals and other patient information will be finalized into the log.
@@ -924,12 +1066,121 @@ def CommandsCheck():
 
 
 -----------------------------COMMANDS TO STILL BE IMPLEMENTED-----------------------------
-            Cardiac Help ("cardiachelp", "helpcardiac", "helpcardiac", "infocardiac")
-            Command that states information, symptoms, and treatments of cardiac arrest and other suspected cardiac events.
+
+
+            -----------PROTOCOLS-----------
+
+            CPR Help ("cprinfo", "cprhelp", "infocpr", "helpcpr") --- IMPLEMENTED
+            Command that gives information for CPR protocol (both EMT, AEMT, and Paramedic)
+
+            Airway Help ("airwayinfo", "airwayhelp", "infoairway", "helpairway", "hair", "iair")
+            Command that gives information for airway protocol (both EMT, AEMT, and Paramedic)
+
+            Medication Administration help ("ivinfo", "ivhelp", "infoiv", "helpiv", "helpadmister", "infoadminister")
+            Command that gives information for various medication administration protocols (oral, nasal, IV, IO, IM, etc..)
+
+
+
+            -----------MEDICAL EMERGENCIES-----------
+            
+            Shock Help ("shockhelp", "shockinfo", "infoshock", "helpshock")
+            Command that states informartion, symptoms, and treatments of hypovelimic shock
+
+            Cardiac Help ("cardiachelp", "cardiacinfo", "helpcardiac", "infocardiac")
+            Command that states information, symptoms, and treatments of a heart attack and other suspected cardiac events.
+
+            Stroke Help ("strokehelp", "strokeinfo", "helpstroke", "infostroke")
+            Command that states information, symptoms, and treatments of a stroke.
+
+            Seizure Help ("seizurehelp", "seizureinfo", "helpseizure", "infoseizure", "infoseiz", "helpseiz")
+            Command that states information, symptoms, and treatments of a seizure.
+
+            Overdose Help ("overdosehelp", "overdoseinfo", "helpoverdose", "infooverdose")
+            Command that states information, symptoms, and treatments of a drug overdose.
+
+            Hypoglycemia Help ("hypoglycemiahelp", "hypoglycemiainfo", "helphypoglycemia", "infohypoglycemia", "diabetichelp", "diabeticinfo","helpdiabetic", "infodiabetic")
+            Command that states information, symptoms, and treatments of a diabetic emergency (hypoglycemia)
+
+            Hyperthermia Help ("hyperthermiahelp", "helphyperthermia", "infohyperthermia", "infohyper")
+            Command that states information, symptoms, and treatments of hypothermia
 
             Hypothermia Help ("hypothermiahelp", "helphypothermia", "infohypothermia", "infohypo")
+            Command that states information, symptoms, and treatments of hypothermia
 
+            Altered Mental State(AMS) Help ("alteredmentalhelp", "helpalteredmental", "infoalteredmental", "alteredmentalinfo", "mentalinfo", "infomental", "helpmental", "mentalhelp"
+            Command that states information, casuses, symptoms, and treatments of AMS
+
+            Allergic Reaction Help ("allergicreactionhelp", "allergicreactioninfo", "helpallergicreaction", "infoallergicreaction", "helpallerg", "infoallerg", "allerghelp", "allerginfo")
+            Command that states information, casuses, symptoms, and treatments of an allergic reaction
+
+            Asthma Help ("asthmahelp", "asthmainfo", "helpasthma", "infoasthma")
+            Command that states information, casuses, symptoms, and treatments of asthma.
+
+            Combative Patient Help ("combativehelp", "combativeinfo", "helpcombative", "infocombative")
+            Command that states information, casuses, symptoms, and treatments of a combative patient
+
+            Head, Neck, and Spine Injury Help ("spinalhelp", "spinalinfo", "helpspinal", "infospinal")
+            Command that states information, causes, symptoms, and treatents of spinal-related injuries.
+
+
+            -----------TRAUMATIC EMERGENCIES-----------
             
+            Tension/Simple Pneumothrax[Collapsed Lung] Help ("pneumothraxhelp", "pneumothraxinfo", "helppneumothrax", "infopneumothrax", "collapsedlunghelp", "collapsedlunginfo", "helpcollapsedlung", "infocollapsedlung")
+            Command that states information, casuses, symptoms, and treatments of Tension and Simple Pneumothrax(collapsed lung), along with needle decompression protocol.
+
+            Fracture Help ("fracturehelp", "fractureinfo", "helpfracture", "infofracture")
+            Command that states information, symptoms, and treatments of a fracture (both open and closed).
+
+            Sprain Help ("sprainhelp", "spraininfo", "helpsprain", "infosprain")
+            Command that states information, symptoms, and treatment of a sprain
+
+            Dislocation Help ("dislocationhelp", "dislocationinfo", "helpdislocation", "infodislocation")
+            Command that states information, symptoms, and treatments of a dislocation
+
+            Burn Help ("burnhelp", "burninfo", "helpburn", "infoburn")
+            Command that states information, causes, symptoms, and treatments of burns (all three types and severities)
+
+            Head Trauma/TBI Help ("tbihelp", "tbiinfo", "helptbi", "infoTBI")
+            Command that states information, casuses, symptoms, and treatments of Head Trauma/TBIs
+
+            Impalement/Stabbing Help ("impalhelp", "impalinfo", "helpimapl", "infoimpal", "stabhelp", "stabinfo", "helpstab", "infostab")
+            Command that states information, symptoms, and treatments of impalement/stabbing injuries
+
+            Crush Injury Help ("crushhelp", "crushinfo", "helpcrush", "infocrush")
+            Command that states information, symptoms, and treatment of a crush injury
+
+            -----------PROCEDURES-----------
+
+            Triage Help ("triagehelp", "triageinfo", "helptriage", "infotriage")
+            Command that states basic information about triage
+
+            Needle Deompression Help ("decompressionhelp", "decompressioninfo", "helpdecompression", "infodecompression")
+            Command that states needle decompression procedure.
+
+            Suction Help ("suctionhelp", "suctioninfo", "helpsuction", "infosuction")
+            Command that states suction procedure
+
+
+             -----------MEDICATIONS-----------
+
+            Cardiac Medications Help ("cardiacmedhelp", "cardiacmedinfo", "helpcardiacmed", "infocardiacmed")
+            Command that lists various cardiac medications, including information about usage and dosages.
+
+            Pain Management Medications Help ("painmedhelp", "painmedinfo", "helppainmed", "infopainmed")
+            Command that lists various pain management medications, including information about usage and dosages.
+
+            Airway/Allergy Medcations Help ("airwaymedhelp", "airwaymedinfo", "helpairwaymned", "infoairwaymed")
+            Command that lists various allergy and airway medications, including information about usage and dosages.
+
+            Bleeding/Blood Loss Medications Help ("bleedmedhelp", "bleedmedinfo", "helpbleedmed", "infobleedmed")
+            Command that lists various blood loss medications, including information about usage and dosages.
+
+            Sedation Medications Help ("sedationmedhelp", "sedationmedinfo", "helpsedationmed", "infosedationmed")
+            Command that lists various sedation medications, including information about usage and dosages.
+
+            Miscellaneous Medications Help ("miscmedhelp", "miscmedinfo", "helpmiscmed", "infomiscmed")
+            Command that lists other medications not listed in the other categories, inlcluding information about usage and dosage.
+
             """)
             #Have to add help commands for different things (hypothermia, cardiac, etc....)
         else:
@@ -968,6 +1219,17 @@ def WelcomeMessage():
 
 #Keep running code indefinitely
 while 1 == 1:
+    print("Before program initialization, please enter your medical training level as a number(1 for EMT, 2 for AEMT, 3 for PM).")
+    while True:
+        try:
+            CurrentInput = int(input())
+            if CurrentInput not in [1,2,3]:
+                raise ValueError
+            else: 
+                ProviderTrainingLevel = CurrentInput
+                break
+        except ValueError:
+            PrintRed("Value Error: Please enter the number of the treatment you wish to update as a valid number between 1 and 3.", '\n')
     WelcomeMessage()
     EndConfirmation = False
     ExitConfirmation == False
