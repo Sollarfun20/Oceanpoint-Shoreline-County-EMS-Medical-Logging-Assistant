@@ -757,28 +757,27 @@ def CPRCareLevelOne():
         d. If not shockable:
             i. Resume CPR
            ii. Start another 2 minute AED timer.
-    9. Reassess the patient every 2 minutes / 5 cycles of CPR
+    9. Reassess the patient every 2 minutes / 5 cycles of CPR:
         a. Check for breathing and a pulse
         b. If pulse/breathing is present:
             i. STOP CPR
-           ii. Control any further injuries
-          iii. Keep the patient stable - Treat for shock until EMS arrival
+           ii. Treat any other injuries
+          iii. Stabilize the patient, treat for shock if neccesary
         c. If pulse/breathing not present:
-            i. Repeat from step 10 until EMS arrives
-           ii. Reassess the patient every 2 minutes / 5 cycles of CPR
+            i. Repeat CPR cycles and AED checks.
    10. You may stop or not attempt CPR when:
         a. The patient has return of spontaneous circulation (ROSC)
-        b. Crews are too exhausted to continue (Call for more hands before this!)
+        b. Crews are too exhausted to continue (Call for more additonal help prior to this!)
         c. A higher level of care has the patient (doctors, etc)
-        d. There are injuries incompatible with life
+        d. There are injuries incompatible with life (visible brain matter, etc)
         e. There are obvious signs of death:
-            i. Dependent lividity
-           ii. Rigor mortis
-        f. The scene becomes unsafe
-        g. You have gone through 3 cycles, preferably 5, of CPR with no ROSC
+            i. Dependent lividity (pooling of blood in body after death)
+           ii. Rigor mortis (stiffening of muscles and joints in body a few hours after death)
+        f. The scene is no longer safe
+        g. You have gone through 3 cycles, preferably 5, of CPR with no return of circulation.
             i. Each cycle is 2 minutes
            ii. Each cycle involves checking the EKG for a shockable rhythm
-          iii. NO ROSC was obtained at any point
+          iii. NO return of circulation was obtained at any point
         h. {Style.RESET_ALL}{Fore.RED}If the patient shows, or has shown signs of life AT ANY POINT DURING TREATMENT - YOU MUST TRANSPORT TO HOSPITAL{Style.RESET_ALL}
     """)
 #---------------------------------------------------------------------------------------------------------------------------------------------------
