@@ -1,3 +1,7 @@
+#PATCH NOTES(EST) 17:28 01/24/2025 - V0.92 BETA
+#Finished airway management commands(UNTESTED)
+
+
 #PATCH NOTES(EST) 18:22 01/22/2025 - V0.91 BETA
 #Added UNTESTED AED timer completion sound for mac OS X systems
 #Started airway management info command

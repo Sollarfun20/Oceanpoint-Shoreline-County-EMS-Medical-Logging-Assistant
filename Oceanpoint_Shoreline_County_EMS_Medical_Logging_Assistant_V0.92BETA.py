@@ -15,9 +15,8 @@
 #My carrd: https://sollarfun20.carrd.co/#
 #My github: https://github.com/Sollarfun20
 
-#PATCH NOTES(EST) 18:22 01/22/2025 - V0.91 BETA
-#Added UNTESTED AED timer completion sound for mac OS X systems
-#Started airway management info command
+#PATCH NOTES(EST) 17:28 01/24/2025 - V0.92 BETA
+#Finished airway management commands(UNTESTED)
 
 #To-Do List
 #help commands for topics such as cardiac and hypothermia
@@ -162,7 +161,8 @@ counter = None
 ListOffset = None
 #Used to offset info lists
 
-
+CancelTimer = False
+#Used to cancel the timer
 
 #--------------------------------------------------------------------------------
 #User Commands
@@ -650,6 +650,7 @@ def TwoMinuteTimer():
     global CurrentInput
     global TimeRemaining
     global EndTimer
+    global CancelTimer
     PrintGreen('The 2 minute AED timer has started, enter "cancel" to cancel the timer or "timeleft" to see the time left on the timer', "\n")
     TimeRemaining = 120                                       #Sets time remaining to 120 seconds (2 minutes)
     while TimeRemaining > 0:                                  #Keeps running until time remaining is at 0 (3 minutes up)
@@ -662,7 +663,7 @@ def TwoMinuteTimer():
         elif CurrentInput == "cancel":
             global EndTimer
             PrintRed("Standby for AED timer cancellation, this may take up to 10 seconds...", "\n")
-            EndTimer = True
+            CancelTimer = True
             return
         else:
             time.sleep(1)
@@ -676,14 +677,15 @@ CurrentInput == "Cleared."
 def TimerInput():
     global CurrentInput
     global EndTimer
+    global CancelTimer
     EndTimer = False
     counter = 0
-    while EndTimer == False:
+    while CancelTimer == False:
         try:
             CurrentInput = inputimeout(timeout=10)
         except Exception:
             counter = counter + 1
-    if EndTimer == True:
+    if CancelTimer == True:
         PrintGreen("The AED timer has been successfully cancelled.", "\n")
     return
 
@@ -691,6 +693,7 @@ def TimerInput():
 #AED timer for 2 minutes, runs both above threads
 def AEDTimer():
     global EndTimer
+    global CancelTimer
     t1 = threading.Thread(target=TwoMinuteTimer)
     t2 = threading.Thread(target=TimerInput)
     t1.start()
@@ -740,6 +743,7 @@ else: #Error catch-all
     CurrentInput = "Cleared"
 EndTimer = False
 CurrentInput = "Cleared"
+CancelTimer = False
 
 #Outputs string for paramedic level of CPR care if applicable
 def CPRCareLevelThree(iteration):
@@ -767,20 +771,27 @@ def CPRCareLevelOne():
      global ListOffset
      print(f"""CPR Protocol: {CPRCareLevelThree(0)}
      1. Complete General Care Protocol and control all major bleeding
+
      2. Confirm pulse is absent and that breathing is abnormal/absent (guppy breathing does not qualify as normal breathing)
+
      3. Consider naxolone if an overdose is possible.
+
      4. Begin Compressions
         a. Place Patient on a flat surface.
         b. Begin chest compressions on center of chest at the nipple lines
         c. Give 30 compressions 2 inches deep at a rate of 100 BPM per CPR cycle.
+
      5. Give 2 rescue breaths/ventilations
         a. Give 2 rescue breaths using a CPR mask or BVM (preferred if available)
         b. Consider usage of an airway adjunct when minimization of interruption to CPR is possible.
+
      6. Repeat compressions and rescue breaths in 30:2 ratio.{CPRCareLevelThree(1)}{CPRCareLevelThree(2)}{CPRCareLevelThree(3)}
+
      7. Setup AED {Style.RESET_ALL}{Fore.RED}(or EKG for PM+){Style.RESET_ALL}
         a. Turn on the AED
         b. Place pads on patient's bare chest.
         c. Start AED timer for 2 minutes via aedtimer command or via seperate timer
+
     8. After 2 minutes of compressions, the AED will state to clear off of the patient for analyzation
         a. Stop all patient contact, including compressions
         b. AED will check for a shockable rythm ( "-checks AED- (shockable?)" )
@@ -791,6 +802,7 @@ def CPRCareLevelOne():
         d. If not shockable:
             i. Resume CPR
            ii. Start another 2 minute AED timer.
+
     9. Reassess the patient every 2 minutes / 5 cycles of CPR:
         a. Check for breathing and a pulse
         b. If pulse/breathing is present:
@@ -799,6 +811,7 @@ def CPRCareLevelOne():
           iii. Stabilize the patient, treat for shock if neccesary
         c. If pulse/breathing not present:
             i. Repeat CPR cycles and AED checks.
+
    10. You may stop or not attempt CPR when:
         a. The patient has return of spontaneous circulation (ROSC)
         b. Crews are too exhausted to continue (Call for more additonal help prior to this!)
@@ -822,40 +835,195 @@ def AirwayCareLevelThree(iteration):
         if iteration == 0:
             return f"{Style.RESET_ALL}{Fore.RED}PARAMEDIC{Style.RESET_ALL}"
         elif iteration == 1:
-            print("test")
+            return f"{Style.RESET_ALL}{Fore.RED}i. If the patient does, abort the SGA and move to intubation. {Style.RESET_ALL}"
+        elif iteration == 2:
+            return f"{Style.RESET_ALL}{Fore.RED}{Style.BRIGHT}PARAMEDIC: RAPID SEQUENCE INTUBATION(RSI){Style.RESET_ALL}"
+        elif iteration == 3:
+            return f"""{Style.RESET_ALL}{Fore.RED}{Style.BRIGHT}Rapid Sequence Intubation(RSI) is a relatively invasive procedure. While it does not have any specific contradictions, BLS airway methods (OPA,NPA,SGA) are preferred in pediatric patients and patients with suspected Traumatic Brain Injuries(TBI). 
+If intubating during CPR, minimize all interruptions in compressions and rescue ventilations.
+If CPR must be interrupted for an intubation, consider an SGA first.
+For patients with TBIS: If they must be intubated, minimize interruption to ventilations and consider an SGA instead of possible. {Style.RESET_ALL}{Fore.RED}
+
+    1. Preoxygenate the patient. Monitor both blood oxygen(spo2 via finger monitor) and exhaled co2 (ETCO2 via ETCO2 monitor placed on the line).
+
+    2. Ensure the airway is clear.
+        a. Remove all previous airway attempts.
+        b. Suction the airway if necessary.
+
+    3. Paralyze and sedate the patient (this may be skipped in cases of cardiac arrest or an unresponsive patient with no gag reflex)
+        a. Sedatives:
+            i. 2 mg/kg IV/IO Ketamine (preferred)
+           ii. 0.2 mg/kh IV/IO Versed, or 0.1 for patients in shock
+        b. Paralytics:
+            i. 1 mg/kg IV/IO Rocuronium
+
+    4. Place the ETT
+        a. Open the patient’s airway, insert laryngoscope blade into the patient’s mouth while moving the patient’s tongue out of the way.
+        b. Once the airway is opened, insert the endotracheal tube through the vocal cords.
+        c. Insert the cuff through the cords and inflate with 5-10ml of air.
+        d. Remove the laryngoscope.
+
+    5. Insure proper and correct intubation
+        a. Connect a BVM to the ETT and ventilate, ensure even chest rise and fall.
+        b. If intubation is successful, continue patient treatment.
+        c. If intubation is unsuccessful (uneven chest rise/fall due to improper positioning, etc…)
+            i. Deflate the cuff and remove the ETT tube.
+           ii. Up to a maximum of 3 times: Re-Attempt Intubation (step 4)
+                                   {Style.RESET_ALL}{Style.BRIGHT}OR{Style.RESET_ALL}{Fore.RED}
+          iii. Use a BLS airway(OPA/NPA/SGA) or no airway adjunct
+                                   {Style.RESET_ALL}{Style.BRIGHT}OR {Style.RESET_ALL}{Fore.RED}
+           iv. {Style.BRIGHT}LAST RESORT:{Style.RESET_ALL}{Fore.RED}Move to cricothyortomy
+
+    6. Post intubation care:
+        a. Sedation:
+            i. 1mg/kg IV/IO Ket, repeat every 5-15 mins as needed
+                              {Style.RESET_ALL}{Style.BRIGHT}OR {Style.RESET_ALL}{Fore.RED}
+           ii. 100mcg/kg IV/IO fent, repeat every 5-10 mins
+                              {Style.RESET_ALL}{Style.BRIGHT}AND {Style.RESET_ALL}{Fore.RED}
+          iii. 2-5mg/kg IV/IO versed, repeat every 5-10 mins{Style.RESET_ALL}{Style.BRIGHT}{Fore.RED}
+
+        b. CARE NOTES: {Style.RESET_ALL}{Fore.RED}
+            i. Intubated patients are {Style.BRIGHT}sedated and paralyzed{Style.RESET_ALL}{Fore.RED} and thus they must be constantly ventilated at all times or they will be unable to breathe.
+
+    7. Continue treatment, regularly re-asses lung sounds, SPO2, and chest rise/fall to ensure proper intubation."""
+
+
+        elif iteration == 4:
+            return f"{Style.RESET_ALL}{Fore.RED}{Style.BRIGHT} PARAMEDIC: Cricothyroctomy {Style.RESET_ALL}"
+
+        elif iteration == 5:
+            return f"""{Style.RESET_ALL}{Fore.RED}A cricothyroctomy (commonly confused with a tracheotomy), is an {Style.BRIGHT} EXTREMELY INVASIVE AND HAZARDOUS PROCEDURE,{Style.RESET_ALL}{Fore.RED} that should only be attempted as a {Style.BRIGHT} last resort{Style.NORMAL} when there is no other option in {Style.BRIGHT}extraordinary situations{Style.NORMAL}.
+
+Cricothyroctomy is a {Style.BRIGHT}surgical{Style.NORMAL} airway procedure that involves cutting the cricothyroid membrane in order to access the trachea and rest of the airway.
+
+{Style.BRIGHT}A cricothyroctomy should ONLY be used when: {Style.NORMAL}
+
+    a. The patient has a life threatening condition
+                    {Style.RESET_ALL}{Style.BRIGHT}AND{Fore.RED}
+    b. The patient is unable to manage their own airway
+                    {Style.RESET_ALL}{Style.BRIGHT}AND{Fore.RED}
+    c. Advanced airway management is indicated
+                {Style.RESET_ALL}{Style.BRIGHT}AND{Fore.RED}
+    d. All other means of airway intervention/management cannot be done.
+
+{Style.BRIGHT}          Procedure: {Style.NORMAL}
+
+    1. Ensure a cricothyroctomy is absolutely necessary
+        a. This is an EXTREMELY HAZARDOUS procedure.
+        b. Ensure all other airway adjuncts (SGA, intubation, etc…) are not viable.
+
+    2. Prepare the patient
+        a. Preoxygenate if possible and monitor SPO2 and ETCO2.
+        b. Position the patient on their back and extend the neck
+            i. If a spinal injury is suspected, do {Style.BRIGHT} not extend the neck {Style.NORMAL}
+        c. Identify the adam’s apple and the cricoid cartilage (the solid ring below the adam’s apple)
+            i. The cricoid membrane lies between these, which is where you will preform the procedure.
+        d. Sterilize the patient’s neck.
+
+    3. Using a scalpel, make a 3 cm vertical incision 1/2 cm deep over the cricothyroid membrane.
+        a. Remove the scalpel, locate the cricothyroid membrane in the incision.
+
+    4. Make a horizontal incision through the cricothyroid membrane.
+        a. Be sure to angle the scalpel AWAY from the vocal cords
+
+    5. Remove scalpel blade and insert finger (ensuring you are wearing proper BSI equipment)
+
+    6. Use a tracheal hook instrument to lift the edge of the incision.
+
+    7. Insert an endotracheal tube into the trachea.
+
+    8. Attach a BVM to the ETT and give ventilations with 100% oxygen.
+
+    9. Ensure the cricothyrotomy was successful: check for clear bi-lateral lung sounds and even chest rise and fall.
+
+    10. Regularly re-assess ventilation, oxygen, and tube placement, and {Style.BRIGHT} transport as soon as possible. {Style.RESET_ALL}"""
+
         else:
             return f"\r"
     else:
         if iteration == 0 and ProviderTrainingLevel == 2:
             return f"{Style.RESET_ALL}{Fore.YELLOW}Advanced EMT{Style.RESET_ALL}"
         elif iteration == 0:
+            return f"i. Call for ALS immeadietly for intubation"
+        elif iteration == 0:
             return f"EMT"
         else:
             return f"\r"
 
-def AirwayCareLevelTwo(iteration):
-    global ListOffset
-    if ProviderTrainingLevel >= 2:
-        if iteration == 1:
-            print("test")
-        elif iteration == 2:
-            print("test")
-        else:
-            return f"\r"
-    else:
-        return f"\r"
+
 
 def AirwayCareLevelOne():
     global ListOffset
     print (f'''Airway Management Protocol: {AirwayCareLevelThree(0)}
-        1. Determine need for airway management
-            a. Is the patient unable to maintain their airway?
-    
-    
-    
-    
-    
-    ''')
+    1. Determine need for airway management
+        a. Is the patient unable to maintain their airway?
+            i. Abnormal Breathing (snoring, gurgling, guppy breathing, etc...)
+           ii. Unresponsive patient with a non-perfect respiration rate (OPA and NPA)
+          iii. Unresponsive patient with no breathing (SGA and RSI)
+
+    2. Consider usage of airway adjunct and of what type.
+
+
+OPA/NPAs:
+
+    1. Attempt an OPA
+        a. Size the OPA to the patient (corner of mouth to the jawline)
+        b. Insert the OPA sideways then rotate 90 degrees so the tip of the OPA holds the tongue and airway open
+
+    2. Ensure the airway is fully secured and that the OPA has not been rejected ("(Does the OPA reject?)")
+        a. If patient breathing is inadequate, begin bagging and ensure even chest rise and fall
+        b. If patient is breathing and adequate, ensure the OPA is assisting.
+
+    3. If the OPA rejects (due to a gag reflex or other condition):
+    4. Attempt an NPA (if it will be sufficent, otherwise move to step 10)
+        a. Size the NPA to the patient (tip of nose to earlobe)
+        b. Lubricate the NPA
+        c. Slide the NPA into the patient's nose.
+
+    5. Ensure the airway is fully secured and that the NPA is effective.
+        a. If patient breathing is inadequate, begin bagging and ensure even chest rise and fall.
+        b. If patient breathing is adequate, ensure the NPA is assisting.
+
+
+SGAs(I-Gels):
+SGAs are the preferred airway in patients where intubation is not possible or in cases where intubation may cause further harm (delaying CPR, pediatric patient, etc…)
+
+    1. Attempt an OPA.
+
+    2. If the OPA rejects and an NPA will not be sufficent, move to an SGA.
+        a. An SGA may be skipped in favor of intubation if a Paramedic+ is on scene.
+
+    3. Prepare the SGA
+        a. Determine appropriate SGA sizing.
+        b. Apply lubricant to the SGA.
+        c. Remove all previous airway adjunct attempts.
+        d. Ensure the patient does not have a gag reflex.
+            {AirwayCareLevelThree(1)}
+
+    4. Apply the SGA
+        a. Insert the SGA into the airway.
+        b. Ensure SGA insertion is successful.
+            i. Ensure patient has not gagged/reject the SGA "(Does the SGA reject?)"
+           ii. Attach a BVM to the SGA and begin bagging.
+          iii. Check lung sounds:
+                1. They should be clear and even between each lung.
+
+    5. Secure the SGA once it is confirmed that the insertion was successful.
+
+{AirwayCareLevelThree(2)}
+
+{AirwayCareLevelThree(3)}
+
+{AirwayCareLevelThree(4)}
+
+{AirwayCareLevelThree(5)}
+
+
+{Style.BRIGHT}
+———————-END OF PROTOCOL———————-
+
+{Style.RESET_ALL}''')
+
 
 
 
